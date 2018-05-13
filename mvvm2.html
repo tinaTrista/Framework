@@ -1,0 +1,84 @@
+
+<div id='app'>
+    <input type="text" v-model="input" id="input">
+    <span id="show"></span>
+</div>
+<script>
+//第一部分， 从modle => views
+function compile(node, vm){
+  if(node.nodeType === 1){
+      var attr = node.attributes;
+      for(let i = 0; i<attr.length; i++){
+          if(attr[i].nodeName === 'v-model'){
+              let name = attr[i].nodeValue;
+              node.addEventListener('keyup', function(e){
+                  vm[name] = e.target.value;// 这里会调用set函数
+              });
+              node.value = vm.data[name];
+              node.removeAttribute('v-model');
+          }
+      }
+      if (child = node.firstChild) {
+          compile(child, vm);
+      }
+  }
+    if(node.nodeType === 3){ // Text类型
+        let reg = /\{\{(.*)\}\}/; // 检测{{}}
+        if(reg.test(node.nodeValue)){
+            let name = RegExp.$1;
+            name = name.trim();
+            node.nodeValue = vm.data[name];
+        }
+    }
+}
+
+function nodeToFragment(node, vm){
+    // 创建文档碎片
+    var flag = document.createDocumentFragment();
+    var child;
+    while(child = node.firstChild){
+        compile(child, vm);
+        flag.appendChild(child);
+    }
+    return flag;
+}
+
+// view =》 model
+function defineProperty(vm, key, val){
+    Object.defineProperty(vm, key, {
+        get: function (){
+            return val;
+        },
+        set: function (newValue){
+            document.getElementById("show").innerHTML = newValue;
+            document.getElementById("input").value = newValue;
+            if(newValue === val){
+                return;
+            }
+            val = newValue;
+        }
+    });
+}
+function observe(data, vm){
+    Object.keys(data).forEach(function(key){
+        defineProperty(vm, key, data[key]);
+    });
+}
+function Vue(options){
+    var id = options.el;
+    this.data = options.data;
+    observe(this.data, this); //添加view=>model的绑定
+    var dom = nodeToFragment(document.getElementById(id), this);
+    document.getElementById(id).appendChild(dom);
+}
+
+var vm = new Vue({
+    el: 'app',
+    data: {
+        input: 'hello',
+        abc:'uuu'
+    }
+});
+console.log(vm)
+
+</script>
