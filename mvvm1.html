@@ -1,0 +1,30 @@
+<!--
+原生实现 view => model 绑定
+通过Object.defineProperty()定义访问器属性 IE9+
+-->
+<input type="text" id="input">
+<div id="show"></div>
+<script>
+    // 访问器属性
+    function defineProperty(obj, attr){
+        var val;
+        Object.defineProperty(obj, attr, {
+            get: function () {
+                return val;
+            },
+            set: function (newValue) {
+                if (newValue === val){
+                    return;
+                }
+                val = newValue;
+                document.getElementById("input").value = newValue;
+                document.getElementById("show").innerHTML = newValue;
+            }
+        });
+    }
+    var obj = {};
+    defineProperty(obj, "txt");
+    document.getElementById("input").addEventListener("keyup", function(e){
+        obj.txt = e.target.value;
+    })
+</script>
